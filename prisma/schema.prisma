@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  password     String
+  phone_number String?
+  email        String?
+  description  String?
+  avatar_url   String?
+  token        Token[]
+  messages     Messages[]
+  Room         Room[]
+}
+
+model Room {
+  id           String       @id @default(uuid())
+  name         String       @unique
+  messages     Messages[]
+  users        User[]
+  ownerId      String       @default("")
+  isPrivate    Boolean      @default(false)
+  isPersonal   Boolean      @default(false)
+  InviteList   InviteList[]
+  inviteLink   String       @default("")
+  firstUserId  String?
+  secondUserId String?
+  avatar_url   String?
+}
+
+model InviteList {
+  id     String  @id @default(uuid())
+  room   Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+  token  String
+  accept Boolean
+}
+
+model Token {
+  token     String   @unique
+  exp       DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  userAgent String
+}
+
+model Messages {
+  id        String   @id @default(uuid())
+  text      String
+  files     File[]
+  username  String
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  Room      Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model File {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  path       String
+  name       String
+  mimetype   String
+  Messages   Messages? @relation(fields: [messagesId], references: [id], onDelete: Cascade)
+  messagesId String?
+}
+
+model ConfirmationCodes {
+  id    String @id @default(uuid())
+  email String
+  code  String
+}
